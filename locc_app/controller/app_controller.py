@@ -18,9 +18,12 @@ class AppController:
         """
         Handle operations requested by the view, e.g., manipulating quantum states.
         """
-        if operation_name == "initialize_quantum_state":
-            result = self.model.initialize_quantum_state(*args)
+        if operation_name == "create_quantum_state":
+            result = self.model.create_quantum_state(*args) 
             self.view.display_message(f"Initialized state: {result}")
+        elif operation_name == "generate_state_desc_label":
+            result = self.model.generate_state_desc_label(*args)
+            self.view.display_message(f"State Descriptor: {result}")
         elif operation_name == "execute_locc_protocol":
             result = self.model.execute_locc_protocol(*args)
             self.view.display_message(f"LOCC protocol result: {result}")
