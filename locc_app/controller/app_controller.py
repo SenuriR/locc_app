@@ -55,7 +55,7 @@ class AppController:
             result = self.model.create_quantum_state(*args) 
             self.view.display_message(f"Initialized state: {result}")
         elif operation_name == "generate_state_desc_label_and_k_party":
-            result = self.model.generate_state_desc_label(*args)
+            result = self.model.generate_state_desc_label_and_k_party(*args)
             self.view.display_message(f"{result}")
         elif operation_name == "save_locc_step":
             result = self.model.add_locc_step(*args)

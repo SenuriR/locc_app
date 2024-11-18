@@ -366,31 +366,26 @@ class MainWindow(QMainWindow):
         amplitude_list = []
         basis_state_list = []
 
-        table_data = []
-        row_count = self.table.rowCount()
-        column_count = self.table.columnCount()
-
-        for row in range(row_count):
+        for row in range(self.table.rowCount()):
             amplitude_item = self.table.item(row, 0)
+            basis_state_item = self.table.item(row, 1)
             if amplitude_item is None or not amplitude_item.text():
                 raise ValueError(f"Missing amplitude in row {row}.")
+            if basis_state_item is None or not basis_state_item.text():
+                raise ValueError(f"Missing basis state in row {row}.")
+            
             amplitude_str = amplitude_item.text()
-
-            # Safely evaluate the amplitude string using allowed functions
             amplitude = eval(amplitude_str, {"__builtins__": {}}, allowed_functions)
 
-            state_item = self.table.item(row, 1)
-            if state_item is None or not state_item.text():
-                raise ValueError(f"Missing basis state in row {row}.")
-            basis_state = state_item.text()
-
+            basis_state = basis_state_item.text()
             if not basis_state.isdigit():
                 raise ValueError(f"Invalid basis state '{basis_state}' in row {row}. Must be digits only.")
 
             amplitude_list.append(amplitude)
             basis_state_list.append(basis_state)
+
             print(f"in view, amplitude_list: {amplitude_list} and basis_state_list: {basis_state_list}")
-            return (amplitude_list, basis_state_list)
+        return (amplitude_list, basis_state_list)
         
     def handle_execute_protocol(self):
         # Call the controller to handle the action

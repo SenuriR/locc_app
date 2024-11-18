@@ -71,11 +71,16 @@ class QuantumModel:
      
     def generate_state_desc_label_and_k_party(self, num_parties_input, num_qudits_input, dim_input):
         try:
-            self.k = int(num_parties_input.ktext())
+            self.k = int(num_parties_input.text())
             self.dims = [] # every item in dims will be the same, keeping dims in list form to be consistent with exisitng k party class structure
             
             num_qudits_list = list(map(int, num_qudits_input.text().split(',')))
-            dim = int(self.dim_input.text())
+            if len(num_qudits_list) != self.k:
+                raise ValueError(f"Number of parties ({self.k}) does not match the number of provided qudits ({len(num_qudits_list)}).")
+            
+            dim = int(dim_input.text())
+            if dim <= 0:
+                raise ValueError("The dimension of each qudit must be a positive integer.")
 
             for i in range(self.k):
                 num_qudits_str = num_qudits_list[i]
