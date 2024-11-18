@@ -21,11 +21,14 @@ class AppController:
         if operation_name == "create_quantum_state":
             result = self.model.create_quantum_state(*args) 
             self.view.display_message(f"Initialized state: {result}")
-        elif operation_name == "generate_state_desc_label":
+        elif operation_name == "generate_state_desc_label_and_k_party":
             result = self.model.generate_state_desc_label(*args)
-            self.view.display_message(f"State Descriptor: {result}")
-        elif operation_name == "execute_locc_protocol":
-            result = self.model.execute_locc_protocol(*args)
-            self.view.display_message(f"LOCC protocol result: {result}")
+            self.view.display_message(f"{result}")
+        elif operation_name == "save_locc_step":
+            result = self.model.add_locc_step(*args)
+            self.view.display_message(f"{result}")
+        elif operation_name == "create_locc_protocol":
+            result = self.model.create_locc_protocol
+            self.view.display_message(f"{result}")
         else:
             self.view.display_message(f"Unknown operation: {operation_name}")
