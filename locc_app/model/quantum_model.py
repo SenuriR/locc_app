@@ -1,8 +1,8 @@
 import numpy as np
 from qiskit.quantum_info import Statevector
 from qiskit.circuit.library import XGate, HGate, CXGate
-from k_party import k_party
-from locc_operation import locc_operation
+from model.k_party import k_party
+from model.locc_operation import locc_operation
 
 class QuantumModel:
     def __init__(self):
@@ -11,6 +11,13 @@ class QuantumModel:
         self.k = None
         self.k_party = None
         self.locc_protocol_obj = None
+
+    def check_before_video(self):
+        if not self.locc_protocol_obj or not self.k_party:
+                raise ValueError("LOCC Operation or K Party instance not created.")
+            
+        print(self.locc_protocol_obj)
+        print(self.k_party)        
 
     def create_locc_protocol(self):
         '''Really just a method to make sure that there is an actual locc protocol object created.'''
@@ -33,26 +40,14 @@ class QuantumModel:
 
         return f"LOCC Operation Created:\nParty Index: {locc_op.party_index}\nQudit Index: {locc_op.qudit_index}\n Operation Type: {locc_op.operation_type}\nCondition: {locc_op.condition}\nOperator: {locc_op.operator}"
 
-    def create_k_party(self):
-        try:
-            if self.current_state is None:
-                raise ValueError("No quantum state created. Please create a state first.")
-            
-            self.kparty = k_party(
-                k=self.k,
-                dims=self.current_state.dim,
-                state_desc=self.state_desc,
-                q_state=self.current_state
-            )
-
-            return f"KParty object created successfully!"
-        except Exception as e:
-            return f"Error: {str(e)}"
-
-    def create_quantum_state(self, amplitude_list, basis_state_list):
+    def create_quantum_state(self, *args):
+        print(args)
+        amplitude_list, basis_state_list = args
         """
         Initialize the quantum state with a given state.
         """
+        print(amplitude_list)
+        print(basis_state_list)
         try:
             num_qubits = len(basis_state_list[0])
             state_vector = np.zeros(2**num_qubits, dtype=complex)
@@ -62,8 +57,6 @@ class QuantumModel:
                 state_vector[index] = amp
 
             self.quantum_state = Statevector(state_vector)
-
-            print(self.current_state.is_valid())
 
             bra_ket_notation = " + ".join(
                 f"({amp})|{basis}⟩" for amp, basis in zip(amplitude_list, basis_state_list)
@@ -79,7 +72,7 @@ class QuantumModel:
     def generate_state_desc_label_and_k_party(self, num_parties_input, num_qudits_input, dim_input):
         try:
             self.k = int(num_parties_input.ktext())
-            dims = [] # every item in dims will be the same, keeping dims in list form to be consistent with exisitng k party class structure
+            self.dims = [] # every item in dims will be the same, keeping dims in list form to be consistent with exisitng k party class structure
             
             num_qudits_list = list(map(int, num_qudits_input.text().split(',')))
             dim = int(self.dim_input.text())
@@ -95,25 +88,18 @@ class QuantumModel:
                 # Append to state_desc as (number of qudits, dimensions of each qudit)
                 self.state_desc.append((num_qudits, [dim] * num_qudits))
 
-                dims.append(dim)
+                self.dims.append(dim)
 
-            if self.current_state is None:
+            if self.quantum_state is None:
                 raise ValueError("No quantum state created. Please create a state first.")
             
             self.kparty = k_party(
                 k=self.k,
-                dims=self.current_state.dim,
+                dims=self.dims,
                 state_desc=self.state_desc,
-                q_state=self.current_state
+                q_state=self.quantum_state
             )
 
             return f"k_party_obj created. state_desc: {self.state_desc}"
         except Exception as e:
             return f"Error {str(e)}"
-
-    def execute_locc_protocol(self, protocol_params):
-        """
-        Execute an LOCC protocol based on the given parameters.
-        """
-        # Dummy implementation
-        return f"Executed protocol with params: {protocol_params}"

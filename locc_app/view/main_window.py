@@ -152,6 +152,63 @@ class MainWindow(QMainWindow):
         self.locc_frame_layout.setContentsMargins(10,10,10,10)
         self.layout.addWidget(self.locc_frame)
 
+        self.spacer = QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.layout.addSpacerItem(self.spacer)
+
+        layout_execution_type = QHBoxLayout()
+        execution_type_label = QLabel("Localisable Entanglement Metric:")
+        layout_execution_type.addWidget(execution_type_label)
+        
+        self.select_execution_type = QComboBox()
+        self.select_execution_type.addItems(["select execution type...", "upper bound", "lower bound"])
+        layout_execution_type.addWidget(self.select_execution_type)
+        self.layout.addLayout(layout_execution_type)
+
+        execute_button = QPushButton("Execute Protocol")
+        execute_button.clicked.connect(self.handle_execute)
+        self.layout.addWidget(execute_button)
+
+    def insert_function(self, func_str):
+        # Get the currently selected cell in the table
+        row = self.table.currentRow()
+        col = self.table.currentColumn()
+
+        if row >= 0 and col == 0:  # Ensure we're in the "Amplitude" column
+            current_item = self.table.item(row, col)
+            if current_item is None:
+                current_item = QTableWidgetItem()
+                self.table.setItem(row, col, current_item)
+            
+            # Insert function text into the selected cell
+            current_text = current_item.text()
+            if func_str.endswith("()"):
+                func_text = func_str[:-1] + ")"  # Ensure we have empty parentheses for cursor placement
+            else:
+                func_text = func_str
+            new_text = f"{current_text}{func_text}"
+
+            current_item.setText(new_text)
+
+            # Place cursor inside the parentheses (e.g., "np.sqrt(|)")
+            cursor_position = len(new_text) - 1  # Index of the character before the closing parenthesis
+            self.table.editItem(current_item)  # Enter editing mode
+            current_item.setText(new_text)  # Update with the new text
+            self.table.setCurrentCell(row, col)
+            self.table.cellWidget(row, col).setFocus()  # Set focus back to the item
+
+            # Move cursor into the parentheses for immediate editing
+            self.table.cellWidget(row, col).setCursorPosition(cursor_position)
+
+    def handle_execute(self):
+        try:
+            execution_type = self.execution_type.currentText()
+            if execution_type == "select execution type...":
+                raise ValueError("Please select execution type")
+        except ValueError as e:
+            QMessageBox.critical(self, "Error", str(e))
+        
+        self.controller.generate_manim_video("Hello, Manim!")
+
     def handle_add_locc_ui(self):
 
         # Clear previous entries
@@ -284,7 +341,9 @@ class MainWindow(QMainWindow):
         self.controller.perform_operation("generate_state_desc_label_and_k_party", self.num_parties_input, self.num_qudits_input, self.dim_input)
 
     def handle_create_state(self):
-        amplitude_list, basis_state_list = self.get_table_data()
+        res = self.get_table_data()
+        amplitude_list = res[0]
+        basis_state_list = res[1]
         self.controller.perform_operation("create_quantum_state", amplitude_list, basis_state_list)
 
     def display_message(self, message):
@@ -307,7 +366,11 @@ class MainWindow(QMainWindow):
         amplitude_list = []
         basis_state_list = []
 
-        for row in range(self.table.rowCount()):
+        table_data = []
+        row_count = self.table.rowCount()
+        column_count = self.table.columnCount()
+
+        for row in range(row_count):
             amplitude_item = self.table.item(row, 0)
             if amplitude_item is None or not amplitude_item.text():
                 raise ValueError(f"Missing amplitude in row {row}.")
@@ -326,7 +389,8 @@ class MainWindow(QMainWindow):
 
             amplitude_list.append(amplitude)
             basis_state_list.append(basis_state)
-            return amplitude_list, basis_state_list
+            print(f"in view, amplitude_list: {amplitude_list} and basis_state_list: {basis_state_list}")
+            return (amplitude_list, basis_state_list)
         
     def handle_execute_protocol(self):
         # Call the controller to handle the action
