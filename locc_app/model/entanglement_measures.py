@@ -5,7 +5,7 @@ from qiskit.quantum_info import shannon_entropy
 from scipy import optimize
 
 from scipy.linalg import expm
-from k_party import k_party
+from model.k_party import k_party
 
 from qiskit.quantum_info.operators import Operator
 from qiskit.quantum_info import Statevector
@@ -243,7 +243,7 @@ class EntanglementMeasures:
         self.psi = self.psi.evolve(U_operator, [self.party_to_measure])
 
         q = k_party(self.k_party_obj.k, self.k_party_obj.dims, self.k_party_obj.state_desc, self.psi)
-        all_possible_posteriors = q.measure_all_possible(self.party_to_measure)
+        all_possible_posteriors = q.measure_all_possibilities(self.party_to_measure)
         
         entropies = []
         probabilities = []
@@ -340,7 +340,7 @@ class EntanglementMeasures:
             self.psi = self.psi.evolve(U_operator, [self.party_to_measure])
             q = k_party(self.k_party_obj.k, self.N, None, self.psi)
 
-            all_posteriors = q.measure_all_possible(self.party_to_measure)
+            all_posteriors = q.measure_all_possibilities(self.party_to_measure)
 
             for a in all_posteriors:
                 x = (a[0], a[1] * prev_prob)

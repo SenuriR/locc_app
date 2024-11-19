@@ -45,7 +45,6 @@ class AppController:
         except Exception as e:
             self.view.display_message(f"Could not play video: {str(e)}")
 
-
     def perform_operation(self, operation_name, *args):
         """
         Handle operations requested by the view, e.g., manipulating quantum states.

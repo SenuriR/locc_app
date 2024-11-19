@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 import numpy as np
+from PyQt5.QtWidgets import QFileDialog
 
 class MainWindow(QMainWindow):
     def __init__(self, controller):
@@ -35,6 +36,14 @@ class MainWindow(QMainWindow):
         # Alternatively, you can add a QSpacerItem to the layout
         spacer = QSpacerItem(20, 0, QSizePolicy.Fixed, QSizePolicy.Minimum)
         self.layout.addItem(spacer)
+
+        self.download_button = QPushButton("Download Template")
+        self.download_button.clicked.connect(self.download_template)
+        self.layout.addWidget(self.download_button, alignment=Qt.AlignCenter)
+
+        self.upload_button = QPushButton("Upload Template")
+        self.upload_button.clicked.connect(self.upload_template)
+        self.layout.addWidget(self.upload_button, alignment=Qt.AlignCenter)
 
         table_h_layout = QHBoxLayout()
 
@@ -222,6 +231,100 @@ class MainWindow(QMainWindow):
         execute_button = QPushButton("Execute Protocol")
         execute_button.clicked.connect(self.handle_execute)
         self.layout.addWidget(execute_button)
+
+    def download_template(self):
+        template_content = """
+    num_parties: 
+    num_qudits: 
+    dim: 
+    table:
+    Amplitude,Basis State
+    ,
+    locc_table:
+    operation,operator,party index,qudit index,condition
+    """
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save Template", "template.txt", "Text Files (*.txt)")
+        if file_path:
+            with open(file_path, "w") as file:
+                file.write(template_content)
+            QMessageBox.information(self, "Success", "Template downloaded successfully!")
+
+    def upload_template(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Open Template", "", "Text Files (*.txt)")
+        if not file_path:
+            return
+
+        try:
+            with open(file_path, "r") as file:
+                data = file.readlines()
+            
+            # Initialize state for parsing
+            current_section = None
+            table_data = []
+            locc_table_data = []
+
+            for line in data:
+                stripped_line = line.strip()
+
+                # Skip empty lines
+                if not stripped_line:
+                    continue
+
+                # Detect section headers or key-value pairs
+                if ":" in stripped_line:
+                    key, value = stripped_line.split(":", 1)
+                    key = key.strip()
+                    value = value.strip()
+
+                    # Handle fields
+                    if key == "num_parties":
+                        self.num_parties_input.setText(value)
+                    elif key == "num_qudits":
+                        self.num_qudits_input.setText(value)
+                    elif key == "dim":
+                        self.dim_input.setText(value)
+                    elif key == "table":
+                        current_section = "table"
+                        table_data = []  # Reset table data
+                    elif key == "locc_table":
+                        current_section = "locc_table"
+                        locc_table_data = []  # Reset locc table data
+                else:
+                    # Collect table data based on the current section
+                    if current_section == "table":
+                        table_data.append(stripped_line)
+                    elif current_section == "locc_table":
+                        locc_table_data.append(stripped_line)
+
+            # Populate the tables
+            if table_data:
+                self.populate_table(self.table, table_data)
+            if locc_table_data:
+                self.populate_table(self.locc_table, locc_table_data)
+
+            QMessageBox.information(self, "Success", "Fields populated successfully!")
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to upload template: {e}")
+
+
+    def populate_table(self, table_widget, data):
+        # Clear any existing content
+        table_widget.clear()
+
+        # First line is assumed to be column labels
+        column_labels = data[0].split(",")
+        table_widget.setColumnCount(len(column_labels))
+        table_widget.setHorizontalHeaderLabels(column_labels)
+
+        # Populate rows starting from the second line
+        row_data = data[1:]  # Skip the first line (column labels)
+        table_widget.setRowCount(len(row_data))
+        for row_index, row in enumerate(row_data):
+            columns = row.split(",")
+            for col_index, value in enumerate(columns):
+                table_widget.setItem(row_index, col_index, QTableWidgetItem(value))
+
 
     def insert_function(self, func_str):
         # Get the currently selected cell in the table
@@ -426,6 +529,7 @@ class MainWindow(QMainWindow):
                 raise ValueError(f"Missing basis state in row {row}.")
             
             amplitude_str = amplitude_item.text()
+            print(amplitude_str)
             amplitude = eval(amplitude_str, {"__builtins__": {}}, allowed_functions)
 
             basis_state = basis_state_item.text()
