@@ -19,18 +19,17 @@ class AppController:
         self.view.show()
         sys.exit(self.app.exec_())
 
-    def generate_manim_video(self, text: str):
+    def get_input_for_video_and_call_video(self):
         """
         Generate a Manim video by delegating to the model and updating the view.
         """
-        self.model.check_before_video() # to ensure locc procotol and k party objs are created with our quantum model
+        locc_protocol, k_party, execution_type = self.model.get_input_for_video() # to ensure locc procotol and k party objs are created with our quantum model
 
         try:
-            video_path = self.video_model.generate_video(text)
-            self.view.display_message("Video generated successfully!")
-            self.play_video_with_os_player(video_path)
+            video_path = self.video_model.generate_video(locc_protocol, k_party, execution_type)
+            return video_path
         except Exception as e:
-            self.view.display_message(f"Error generating video: {str(e)}")
+            return f"Error generating video: {str(e)}"
     
     def play_video_with_os_player(self, video_path):
         """
@@ -60,5 +59,12 @@ class AppController:
         elif operation_name == "save_locc_operation":
             result = self.model.save_locc_operation(*args)
             self.view.display_message(f"{result}")
+        elif operation_name == "execute_protocol":
+            self.model.save_execution_type(*args)
+            result = self.get_input_for_video_and_call_video()
+            if result[0] == "E": # to ensure it's the error message
+                self.view.display_message(f"{result}")
+            else:
+                self.play_video_with_os_player(result)
         else:
             self.view.display_message(f"Unknown operation: {operation_name}")

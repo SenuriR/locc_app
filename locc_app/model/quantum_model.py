@@ -10,14 +10,17 @@ class QuantumModel:
         self.state_desc = []
         self.k = None
         self.k_party = None
+        self.execution_type = None
         self.locc_protocol_obj = []
 
-    def check_before_video(self):
+    def get_input_for_video(self):
         if not self.locc_protocol_obj or not self.k_party:
                 raise ValueError("LOCC Operation or K Party instance not created.")
             
-        print(self.locc_protocol_obj)
-        print(self.k_party)        
+        return (self.locc_protocol_obj, self.k_party, self.execution_type)
+
+    def save_execution_type(self, execution_type):
+        self.execution_type = execution_type
 
     def save_locc_operation(self, party_index, qudit_index, operation_type, operator_choice, condition):
         locc_op_str = ""

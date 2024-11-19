@@ -4,7 +4,7 @@ class VideoModel:
     def __init__(self):
         self.video_path = None  # Store the path of the generated video
 
-    def generate_video(self, text: str, output_path: str = "manim_output.mp4"):
+    def generate_video(self, locc_protocol, k_party, execution_type, output_path: str = "manim_output.mp4"):
         """
         Generate a Manim video with the given text and save it to the specified path.
         """
@@ -13,8 +13,14 @@ class VideoModel:
         config.output_file = output_path
 
         class VideoScene(Scene):
+            def __init__(self, **kwargs):
+                self.locc_protocol = locc_protocol
+                self.k_party = k_party
+                self.execution_type = execution_type
+                super().__init__(**kwargs)
+
             def construct(self):
-                title = Text(text)
+                title = Text("Hello! Initialization successful!")
                 self.play(Write(title))
                 self.wait(2)
 

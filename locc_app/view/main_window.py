@@ -262,7 +262,8 @@ class MainWindow(QMainWindow):
         except ValueError as e:
             QMessageBox.critical(self, "Error", str(e))
         
-        self.controller.generate_manim_video("Hello, Manim!")
+        # self.controller.generate_manim_video("Hello, Manim!")
+        self.controller.perform_operation("execute_protocol", execution_type)
 
     
     def locc_insert_operator(self, func_str):
