@@ -57,14 +57,8 @@ class AppController:
         elif operation_name == "generate_state_desc_label_and_k_party":
             result = self.model.generate_state_desc_label_and_k_party(*args)
             self.view.display_message(f"{result}")
-        elif operation_name == "save_locc_step":
-            result = self.model.add_locc_step(*args)
-            self.view.display_message(f"{result}")
-        elif operation_name == "create_locc_protocol":
-            result = self.model.create_locc_protocol
-            self.view.display_message(f"{result}")
-        elif operation_name == "execute_protocol":
-            result = self.model.execute_protocol(*args)
+        elif operation_name == "save_locc_operation":
+            result = self.model.save_locc_operation(*args)
             self.view.display_message(f"{result}")
         else:
             self.view.display_message(f"Unknown operation: {operation_name}")

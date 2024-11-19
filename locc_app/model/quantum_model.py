@@ -10,7 +10,7 @@ class QuantumModel:
         self.state_desc = []
         self.k = None
         self.k_party = None
-        self.locc_protocol_obj = None
+        self.locc_protocol_obj = []
 
     def check_before_video(self):
         if not self.locc_protocol_obj or not self.k_party:
@@ -19,14 +19,8 @@ class QuantumModel:
         print(self.locc_protocol_obj)
         print(self.k_party)        
 
-    def create_locc_protocol(self):
-        '''Really just a method to make sure that there is an actual locc protocol object created.'''
-        if self.locc_protocol_obj is None:
-            raise ValueError("Error. LOCC Protocol has no items.")
-        else:
-            return f"LOCC Protocl created successfully, number of items in protocol: {len(self.locc_protocol_obj)}"
-
-    def save_locc_step(self, party_index, qudit_index, operation_type, operator_choice, condition):
+    def save_locc_operation(self, party_index, qudit_index, operation_type, operator_choice, condition):
+        locc_op_str = ""
         if operator_choice == "XGate":
             operator = XGate()
         elif operator_choice == "HGate":
@@ -37,8 +31,12 @@ class QuantumModel:
         locc_op = locc_operation(party_index, qudit_index, operation_type, operator, condition)
 
         self.locc_protocol_obj.append(locc_op)
+        locc_op_str += f"LOCC Operation Created:\nParty Index: {locc_op.party_index}\nQudit Index: {locc_op.qudit_index}\n Operation Type: {locc_op.operation_type}\nCondition: {locc_op.condition}\nOperator: {locc_op.operator}\n\n"
 
-        return f"LOCC Operation Created:\nParty Index: {locc_op.party_index}\nQudit Index: {locc_op.qudit_index}\n Operation Type: {locc_op.operation_type}\nCondition: {locc_op.condition}\nOperator: {locc_op.operator}"
+        if self.locc_protocol_obj is None:
+            raise ValueError("Error. LOCC Protocol has no items.")
+        else:
+            return f"LOCC Protocl created successfully, number of items in protocol: {len(self.locc_protocol_obj)} \n {locc_op_str}"
 
     def create_quantum_state(self, *args):
         print(args)
@@ -98,13 +96,13 @@ class QuantumModel:
             if self.quantum_state is None:
                 raise ValueError("No quantum state created. Please create a state first.")
             
-            self.kparty = k_party(
+            self.k_party = k_party(
                 k=self.k,
                 dims=self.dims,
                 state_desc=self.state_desc,
                 q_state=self.quantum_state
             )
 
-            return f"k_party_obj created. state_desc: {self.state_desc}"
+            return f"k_party_obj created. state_desc: {self.state_desc}, {self.k_party}"
         except Exception as e:
             return f"Error {str(e)}"

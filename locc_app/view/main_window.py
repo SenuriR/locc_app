@@ -15,7 +15,7 @@ class MainWindow(QMainWindow):
         # Set up the main window
         self.setWindowTitle("Quantum State Input and Operations")
         # self.setGeometry(100, 100, 600, 600)
-        self.setGeometry(100, 60, 500, 800)
+        self.setGeometry(100, 60, 700, 900)
         self.setFixedSize(self.width(), self.height())
         self.fixed_width = 50
 
@@ -43,7 +43,7 @@ class MainWindow(QMainWindow):
         self.table.setHorizontalHeaderLabels(["Amplitude", "Basis State"])
 
         self.table.setFixedSize(300,200)
-        table_h_layout.addWidget(self.table, alignment=Qt.AlignLeft)
+        table_h_layout.addWidget(self.table, alignment=Qt.AlignCenter)
 
         add_remove_v_layout = QVBoxLayout()
         add_remove_v_layout.setSpacing(5)  # Set spacing to 5 pixels (or any small value)
@@ -130,27 +130,82 @@ class MainWindow(QMainWindow):
         self.generate_button.setFixedSize(300,30)
         self.layout.addWidget(self.generate_button, alignment=Qt.AlignCenter)
 
-        self.header_widget = QWidget()
-        self.header_layout = QVBoxLayout(self.header_widget)
+        # Alternatively, you can add a QSpacerItem to the layout
+        spacer_new = QSpacerItem(20, 0, QSizePolicy.Fixed, QSizePolicy.Minimum)
+        self.layout.addItem(spacer_new)
 
-        self.header_layout.addWidget(QLabel("LOCC Operation Creator"), alignment=Qt.AlignCenter)
-        h_layout1 = QHBoxLayout()
-        self.locc_entry = QLineEdit()
-        h_layout1.addWidget(QLabel("Number of Steps in Procotol:"))
-        h_layout1.addWidget(self.locc_entry)
+        self.layout.addWidget(QLabel("LOCC Operation Creator"), alignment=Qt.AlignCenter)
+        
+        # Conditional operation entries
+        cond_text = QLabel("Leave the condition entry empty if the step is NOT a CONDITIONAL OPERATION.")
+        cond_text.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(cond_text)
 
-        add_locc_button = QPushButton("Add LOCC Entries")
-        add_locc_button.clicked.connect(self.handle_add_locc_ui)
-        h_layout1.addWidget(add_locc_button)
+        locc_table_h_layout = QHBoxLayout()
 
-        self.header_layout.addLayout(h_layout1)
-        self.layout.addWidget(self.header_widget)
-        self.locc_frame = QWidget()
-        self.locc_frame.setFixedWidth(self.width() - 20)
-        self.locc_frame_layout = QVBoxLayout(self.locc_frame)
-        self.locc_frame_layout.setSpacing(1)
-        self.locc_frame_layout.setContentsMargins(10,10,10,10)
-        self.layout.addWidget(self.locc_frame)
+        # Create a table widget for amplitude and basis state input
+        self.locc_table = QTableWidget(0,5)  # Initially zero rows, 5 columns
+        self.locc_table.setHorizontalHeaderLabels(["operation", "operator", "party index", "qudit index", "condition"])
+
+        self.locc_table.setFixedSize(505, 200)
+        locc_table_h_layout.addWidget(self.locc_table, alignment=Qt.AlignLeft)
+
+        locc_add_remove_v_layout = QVBoxLayout()
+        locc_add_remove_v_layout.setSpacing(5)  # Set spacing to 5 pixels (or any small value)
+        locc_add_remove_v_layout.setContentsMargins(0,0,0,0)
+
+        # Add buttons to add/remove rows
+        self.locc_add_row_button = QPushButton("Add Row")
+        self.locc_add_row_button.clicked.connect(self.locc_add_row)
+        self.locc_add_row_button.setFixedSize(100,30)
+        locc_add_remove_v_layout.addWidget(self.locc_add_row_button, alignment=Qt.AlignCenter)
+
+        self.locc_remove_row_button = QPushButton("Remove Row")
+        self.locc_remove_row_button.clicked.connect(self.locc_remove_row)
+        self.locc_remove_row_button.setFixedSize(100,30)
+        locc_add_remove_v_layout.addWidget(self.locc_remove_row_button, alignment=Qt.AlignCenter)
+        
+        locc_table_h_layout.addLayout(locc_add_remove_v_layout)
+        self.layout.addLayout(locc_table_h_layout)
+
+        # locc operation type Buttons Layout
+        self.locc_op_buttons_layout = QHBoxLayout()
+        self.layout.addLayout(self.locc_op_buttons_layout)
+
+        # Dictionary of allowed functions with formatted strings
+        self.locc_allowed_ops = {
+            'M': 'measurement',
+            'C': 'condition'
+        }
+
+        # Add function buttons
+        for func_name, func_str in self.locc_allowed_ops.items():
+            button = QPushButton(func_name)
+            button.clicked.connect(lambda _, f=func_str: self.locc_insert_operation(f))
+            self.locc_op_buttons_layout.addWidget(button)
+
+        # locc operator type Buttons Layout
+        self.locc_operator_buttons_layout = QHBoxLayout()
+        self.layout.addLayout(self.locc_operator_buttons_layout)
+
+        # Dictionary of allowed functions with formatted strings
+        self.locc_allowed_operators = {
+            'XGate': 'XGate',
+            'HGate': 'HGate',
+            'CXGate': 'CXGate'
+        }
+
+        # Add function buttons
+        for func_name, func_str in self.locc_allowed_operators.items():
+            button = QPushButton(func_name)
+            button.clicked.connect(lambda _, f=func_str: self.locc_insert_operator(f))
+            self.locc_operator_buttons_layout.addWidget(button)
+
+        # Add a button to create the quantum state
+        self.create_locc_protocol = QPushButton("Create LOCC Protocol")
+        self.create_locc_protocol.clicked.connect(self.handle_create_locc_protocol)
+        self.create_locc_protocol.setFixedSize(200,30)
+        self.layout.addWidget(self.create_locc_protocol, alignment=Qt.AlignCenter)
 
         self.spacer = QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.layout.addSpacerItem(self.spacer)
@@ -201,7 +256,7 @@ class MainWindow(QMainWindow):
 
     def handle_execute(self):
         try:
-            execution_type = self.execution_type.currentText()
+            execution_type = self.select_execution_type.currentText()
             if execution_type == "select execution type...":
                 raise ValueError("Please select execution type")
         except ValueError as e:
@@ -209,124 +264,82 @@ class MainWindow(QMainWindow):
         
         self.controller.generate_manim_video("Hello, Manim!")
 
-    def handle_add_locc_ui(self):
-
-        # Clear previous entries
-        while self.locc_frame_layout.count():
-            item = self.locc_frame_layout.takeAt(0)
-            widget = item.widget()
-            if widget is not None:
-                widget.deleteLater()
-            elif item.layout() is not None:
-                self.clear_layout(item.layout())
-            del item
-
-        # Validate input
-        if self.locc_entry_text == '':
-            QMessageBox.critical(
-                self.parent_gui, "Input Error",
-                "Enter an integer value in 'Number of steps in LOCC protocol (number of locc objects)' field."
-            )
-            return None
-
-        try:
-            num_steps = int(self.locc_entry_text)
-        except ValueError:
-            QMessageBox.critical(
-                self.parent_gui, "Input Error",
-                "Invalid input. Enter a valid integer."
-            )
-            return None
-
-        self.locc_step_widgets.clear()
-
-        # Conditional operation entries
-        cond_text = QLabel("Leave the condition entry empty if the step is NOT a CONDITIONAL OPERATION.")
-        cond_text.setAlignment(Qt.AlignCenter)
-
-        # Dynamically add LOCC entries
-        for i in range(num_steps):
-            self.curr_step_widgets = {}
-            # Operation type selection
-            h_layout = QHBoxLayout()
-            h_layout.setContentsMargins(0, 10, 150, 0)
-            h_layout.setSpacing(0)
-            operation_type_combobox = QComboBox()
-            operation_type_combobox.addItems(["select operation type...", "measurement", "conditional"])
-            h_layout.addWidget(QLabel("Operation Type:"))
-            h_layout.addWidget(operation_type_combobox)
-            self.locc_frame_layout.addLayout(h_layout)
-            self.curr_step_widgets['operation_type_combobox'] = operation_type_combobox
-
-            # Operator, party index, and qudit index
-            operator_party_qudit_layout = QHBoxLayout()
-            operator_party_qudit_layout.setContentsMargins(0,10,10,0)
-            operator_party_qudit_layout.addWidget(QLabel("Operator"))
-            operator_combobox = QComboBox()
-            operator_combobox.addItems(["XGate", "HGate", "CXGate"])
-            operator_party_qudit_layout.addWidget(operator_combobox)
-            self.curr_step_widgets['operator_combobox'] = operator_combobox
-
-            party_index_entry = QLineEdit()
-            party_index_entry.setFixedWidth(self.fixed_width)
-            operator_party_qudit_layout.addWidget(QLabel("Party Index:"))
-            operator_party_qudit_layout.addWidget(party_index_entry)
-            self.curr_step_widgets['party_index_entry'] = party_index_entry
-
-            qudit_index_entry = QLineEdit()
-            qudit_index_entry.setFixedWidth(self.fixed_width)
-            operator_party_qudit_layout.addWidget(QLabel("Qudit Index:"))
-            operator_party_qudit_layout.addWidget(qudit_index_entry)
-            self.curr_step_widgets['qudit_index_entry'] = qudit_index_entry
-
-            self.locc_frame_layout.addLayout(operator_party_qudit_layout)
-
-            cond_h_layout = QHBoxLayout()
-            cond_h_layout.setSpacing(0)
-            cond_h_layout.setContentsMargins(0, 10, 125, 0)
-            cond_info_entry = QLineEdit()
-            cond_info_entry.setFixedWidth(self.fixed_width)
-            cond_h_layout.addWidget(QLabel("Condition Entry Info (party, qudit, result):"))
-            cond_h_layout.addWidget(cond_info_entry)
-
-            self.locc_frame_layout.addLayout(cond_h_layout)
-
-            # Save button for each step
-            save_locc_entry_button = QPushButton("Save LOCC step entry")
-            save_locc_entry_button.clciked.connect(self.handle_save_locc_entry)
-            self.locc_frame_layout.addWidget(save_locc_entry_button)
-
-            # Spacer after each step
-            spacer_2 = QSpacerItem(40, 40, QSizePolicy.Minimum, QSizePolicy.Minimum)
-            self.locc_frame_layout.addSpacerItem(spacer_2)
-
-            # Add step widgets to the list
-            self.locc_step_widgets.append(self.curr_step_widgets)
-
-        create_locc_protocol_button = QPushButton("Create LOCC Protocol")
-        create_locc_protocol_button.clicked.connect(self.handle_create_locc_protocol)
-        self.locc_frame_layout.addWidget(create_locc_protocol_button)
-
-    def handle_create_locc_protocol(self):
-        self.controller.perform_operation("create_locc_protocol")
     
-    def handle_save_locc_entry(self):
-        try:
-            # Extract basic values from widgets
-            party_index = int(self.curr_step_widgets['party_index_entry'].text())
-            qudit_index = int(self.curr_step_widgets['qudit_index_entry'].text())
-            operation_type = self.curr_step_widgets['operation_type_combobox'].currentText()
-            operator_choice = self.curr_step_widgets['operator_combobox'].currentText()
-            condition = None
-            if operation_type == "conditional":
-                cond_info_list = list(map(int, self.cond_info_entry.text().split(',')))
-                condition = (cond_info_list[0], cond_info_list[1], cond_info_list[2]) # party, qudit, result
-            
-            self.controller.perform_operation("save_locc_step", party_index, qudit_index, operation_type, operator_choice, condition)
+    def locc_insert_operator(self, func_str):
+        # Get the currently selected cell in the table
+        row = self.locc_table.currentRow()
+        col = self.locc_table.currentColumn()
 
-        except ValueError:
-            # Show error message when inputs are invalid
-            QMessageBox.critical(self.parent_gui, "Input Error", "Enter valid integer values.")
+        if row >= 0 and col == 1:  # Ensure we're in the "operator" column
+            current_item = self.locc_table.item(row, col)
+            if current_item is None:
+                current_item = QTableWidgetItem()
+                self.locc_table.setItem(row, col, current_item)
+            
+            # Insert function text into the selected cell
+            # current_text = current_item.text()
+            current_text = ""
+            func_text = func_str
+            new_text = f"{current_text}{func_text}"
+            current_item.setText(new_text)
+
+    def locc_insert_operation(self, func_str):
+        # Get the currently selected cell in the table
+        row = self.locc_table.currentRow()
+        col = self.locc_table.currentColumn()
+
+        if row >= 0 and col == 0:  # Ensure we're in the "operation type" column
+            current_item = self.locc_table.item(row, col)
+            if current_item is None:
+                current_item = QTableWidgetItem()
+                self.locc_table.setItem(row, col, current_item)
+            
+            # Insert function text into the selected cell
+            # current_text = current_item.text()
+            current_text = ""
+            func_text = func_str
+            new_text = f"{current_text}{func_text}"
+            current_item.setText(new_text)
+
+    def handle_create_state(self):
+        res = self.get_table_data()
+        amplitude_list = res[0]
+        basis_state_list = res[1]
+        self.controller.perform_operation("create_quantum_state", amplitude_list, basis_state_list)
+    
+    def handle_create_locc_protocol(self):
+        # each row in the locc table represents a locc operation
+        for row in range(self.locc_table.rowCount()):
+            operation_item = self.locc_table.item(row, 0)
+            operator_item = self.locc_table.item(row, 1)
+            party_index_item = self.locc_table.item(row, 2)
+            qudit_index_item = self.locc_table.item(row, 3)
+            condition_entry_info = self.locc_table.item(row, 4)
+            if operation_item is None or not operation_item.text():
+                raise ValueError(f"Missing operation in row {row}.")
+            if operator_item is None or not operator_item.text():
+                raise ValueError(f"Missing operator in row {row}.")
+            if party_index_item is None or not party_index_item.text():
+                raise ValueError(f"Missing party index in row {row}.")
+            if qudit_index_item is None or not qudit_index_item.text():
+                raise ValueError(f"Missing qudit index in row {row}.")
+            
+            operation_str = operation_item.text()
+            operator_str = operator_item.text()
+
+            party = party_index_item.text()
+            if not party.isdigit():
+                raise ValueError(f"Invalid party index '{party}' in row {row}. Must be digits only.")
+            
+            qudit = qudit_index_item.text()
+            if not qudit.isdigit():
+                raise ValueError(f"Invalid qudit index '{qudit}' in row {row}. Must be digits only.")
+            
+            condition = None
+            if operation_str == "conditional":
+                cond_info_list = list(map(int, self.condition_entry_info.text().split(',')))
+                condition = (cond_info_list[0], cond_info_list[1], cond_info_list[2]) # party, qudit, result
+            self.controller.perform_operation("save_locc_operation", int(party), int(qudit), operation_str, operator_str, condition)
 
     def add_row(self):
         row_position = self.table.rowCount()
@@ -337,19 +350,56 @@ class MainWindow(QMainWindow):
         if current_row >= 0:
             self.table.removeRow(current_row)
 
+    def locc_add_row(self):
+        row_position = self.locc_table.rowCount()
+        self.locc_table.insertRow(row_position)
+    
+    def locc_remove_row(self):
+        current_row = self.locc_table.currentRow()
+        if current_row >= 0:
+            self.locc_table.removeRow(current_row)
+
     def handle_generate_state_desc_label_and_k_party(self):
         self.controller.perform_operation("generate_state_desc_label_and_k_party", self.num_parties_input, self.num_qudits_input, self.dim_input)
-
-    def handle_create_state(self):
-        res = self.get_table_data()
-        amplitude_list = res[0]
-        basis_state_list = res[1]
-        self.controller.perform_operation("create_quantum_state", amplitude_list, basis_state_list)
 
     def display_message(self, message):
         # Display a message to the user
         QMessageBox.information(self, "Information", message)
 
+    def locc_get_table_data(self):
+        # each row in the locc table represents a locc operation
+        for row in range(self.locc_table.rowCount()):
+            operation_item = self.locc_table.item(row, 0)
+            operator_item = self.locc_table.item(row, 1)
+            party_index_item = self.locc_table.item(row, 2)
+            qudit_index_item = self.locc_table.item(row, 3)
+            condition_entry_info = self.locc_table.item(row, 4)
+            if operation_item is None or not operation_item.text():
+                raise ValueError(f"Missing operation in row {row}.")
+            if operator_item is None or not operator_item.text():
+                raise ValueError(f"Missing operator in row {row}.")
+            if party_index_item is None or not party_index_item.text():
+                raise ValueError(f"Missing party index in row {row}.")
+            if qudit_index_item is None or not qudit_index_item.text():
+                raise ValueError(f"Missing qudit index in row {row}.")
+            
+            operation_str = operation_item.text()
+            operator_str = operator_item.text()
+
+            party = party_index_item.text()
+            if not party.isdigit():
+                raise ValueError(f"Invalid party index '{party}' in row {row}. Must be digits only.")
+            
+            qudit = qudit_index_item.text()
+            if not qudit.isdigit():
+                raise ValueError(f"Invalid qudit index '{qudit}' in row {row}. Must be digits only.")
+            
+            condition = None
+            if operation_str == "conditional":
+                cond_info_list = list(map(int, self.condition_entry_info.text().split(',')))
+                condition = (cond_info_list[0], cond_info_list[1], cond_info_list[2]) # party, qudit, result
+        self.controller.perform_operation("save_locc_step", int(party), int(qudit), operation_str, operator_str, condition)
+    
     def get_table_data(self):
         # Allowed functions for user input
         allowed_functions = {
@@ -384,9 +434,4 @@ class MainWindow(QMainWindow):
             amplitude_list.append(amplitude)
             basis_state_list.append(basis_state)
 
-            print(f"in view, amplitude_list: {amplitude_list} and basis_state_list: {basis_state_list}")
         return (amplitude_list, basis_state_list)
-        
-    def handle_execute_protocol(self):
-        # Call the controller to handle the action
-        self.controller.perform_operation("execute_locc_protocol", {"protocol": "example"})

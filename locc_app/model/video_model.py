@@ -1,4 +1,4 @@
-from manim import Scene, Text, Write
+from manim import config, Scene, Text, Write
 
 class VideoModel:
     def __init__(self):
@@ -8,6 +8,10 @@ class VideoModel:
         """
         Generate a Manim video with the given text and save it to the specified path.
         """
+        # Update Manim's configuration for the output file
+        config.media_dir = "./media"
+        config.output_file = output_path
+
         class VideoScene(Scene):
             def construct(self):
                 title = Text(text)
@@ -15,6 +19,6 @@ class VideoModel:
                 self.wait(2)
 
         # Generate the video
-        VideoScene().render(output_file_path=output_path)
-        self.video_path = output_path
+        VideoScene().render()
+        self.video_path = config.output_file
         return self.video_path
