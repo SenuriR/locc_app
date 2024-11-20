@@ -16,7 +16,7 @@ class MainWindow(QMainWindow):
         # Set up the main window
         self.setWindowTitle("Quantum State Input and Operations")
         # self.setGeometry(100, 100, 600, 600)
-        self.setGeometry(100, 60, 700, 900)
+        self.setGeometry(100, 60, 700, 950)
         self.setFixedSize(self.width(), self.height())
         self.fixed_width = 50
 
