@@ -24,6 +24,7 @@ class QuantumModel:
 
     def save_locc_operation(self, party_index, qudit_index, operation_type, operator_choice, condition):
         locc_op_str = ""
+        print(operation_type)
         if operator_choice == "XGate":
             operator = XGate()
         elif operator_choice == "HGate":

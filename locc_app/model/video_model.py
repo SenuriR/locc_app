@@ -28,9 +28,12 @@ class VideoModel:
                 self.k_party_scale_factor = 1 / (self.total_num_parties ** 0.5) if self.total_num_parties > 1 else 1 # scale factor to ensure proper spacing for multiple parties
                 self.k_party_mobjects = {} # k_party_mobjects[party_index] = (spheres_group, node_group, edge_group, edge_map)
                 self.party_edges = {}
+                self.removed_qudits = {party_index: set() for party_index in range(self.total_num_parties)}
                 super().__init__(**kwargs)
 
             def construct(self):
+                # self.set_camera_orientation(phi=75 * DEGREES, theta=45 * DEGREES)
+                self.set_camera_orientation(phi=60*DEGREES, theta=-45*DEGREES)
                 print(self.k_party_obj.q_state.data)
                 self.create_k_party_system()
                 self.wait(2)
@@ -63,52 +66,46 @@ class VideoModel:
                         self.play(Create(party_line))
             
             def create_party(self, party_index, offset_x, scale_factor):
-                ''' To create a singular party at a given offset_x location'''
-                print("IN CREATE PARTY")
-                # get basic information of current party
                 party_state_desc = self.k_party_obj.state_desc[party_index]
                 party_num_qudits, party_qudit_dims = party_state_desc[0], party_state_desc[1]
 
-                # initialize qudits of party and related coordinates for the placing of those qudits
-                qudits = [Sphere(radius=0.3 * scale_factor, color=BLUE) for _ in range(party_num_qudits)]
-                coords = [(2 * scale_factor * np.cos(angle), 2 * scale_factor * np.sin(angle), 0) for angle in np.linspace(0, 2 * np.pi, party_num_qudits, endpoint=False)]
-                
+                # Adjust the number of qudits based on removed qudits
+                remaining_qudits = [
+                    i for i in range(party_num_qudits)
+                    if i not in self.removed_qudits[party_index]
+                ]
+                qudits = [Sphere(radius=0.3 * scale_factor, color=BLUE) for _ in remaining_qudits]
+                coords = [
+                    (2 * scale_factor * np.cos(angle), 2 * scale_factor * np.sin(angle), 0)
+                    for angle in np.linspace(0, 2 * np.pi, len(remaining_qudits), endpoint=False)
+                ]
+
                 for qudit, coord in zip(qudits, coords):
                     qudit.move_to([coord[0] + offset_x, coord[1], coord[2]])
 
-                # qudit_dots will be used in the context of measurement -- they exist "under" the qudits (spheres)
                 qudit_dots = [Dot(point=[coord[0] + offset_x, coord[1], coord[2]]) for coord in coords]
 
-                # initialize edges of party -- currently, edges represent the entanglement between qudits of the current party
-                # edge --> there is some degree of entanglement between given 2 qudits
-                # no edge --> there is NO entanglement between given 2 qudits
-                
-                edges = [] # to collect all edge objects, allows for easy creation of mobject
-                edge_map = {} # edge_map[(i,j)] = edge --> easy access to the mobject edge that connects qudits 'i' and 'j' # need to add functionality to access a parties edge map at any time
-                for i in range(party_num_qudits):
-                    for j in range(i + 1, party_num_qudits):
-                        if (j, i) not in edge_map: # to avoid creating repeat edges
-                            edge = DashedLine(qudit_dots[i].get_center(), qudit_dots[j].get_center())
-                            edges.append(edge)
-                            edge_map[(i, j)] = edge
+                edges = []
+                edge_map = {}
+                for i in range(len(remaining_qudits)):
+                    for j in range(i + 1, len(remaining_qudits)):
+                        edge = DashedLine(qudit_dots[i].get_center(), qudit_dots[j].get_center())
+                        edges.append(edge)
+                        edge_map[(remaining_qudits[i], remaining_qudits[j])] = edge
 
                 sphere_group = VGroup(*qudits)
                 node_group = VGroup(*qudit_dots)
                 edge_group = VGroup(*edges)
 
                 self.k_party_mobjects[party_index] = (sphere_group, node_group, edge_group, edge_map)
-
                 self.play(Create(sphere_group), Create(node_group), Create(edge_group))
 
-                # Calculate average position
                 avg_x = np.mean([coord[0] for coord in coords]) + offset_x
                 avg_y = np.mean([coord[1] for coord in coords])
                 avg_z = np.mean([coord[2] for coord in coords])
 
-                average_position = np.array([avg_x, avg_y, avg_z])
-                print("Average position of party:", average_position)
+                return np.array([avg_x, avg_y, avg_z])
 
-                return average_position
 
                 # add functionality to zoom into party that is being measured
             def clear_scene(self):
@@ -174,18 +171,22 @@ class VideoModel:
                     elif locc_op.operation_type == "measurement":
                         print("IN MEASURE CONDITION")
                         print(f"qudit index: {qudit_index}")
+                        print(self.k_party_obj.q_state.data.shape)
                         
                         # Normalize the state before measurement
                         self.k_party_obj.q_state = self.k_party_obj.q_state / np.linalg.norm(self.k_party_obj.q_state.data)
 
                         outcome, self.k_party_obj.q_state = self.k_party_obj.q_state.measure([qudit_index])
+                        self.outcome = outcome
                         self.k_party_obj.measurement_result[(locc_op.party_index, qudit_index)] = outcome
 
+                        '''
                         meas_txt0 = Text("MEASUREMENT OPERATION")
                         meas_txt0.move_to(UP)   
                         self.play(Create(meas_txt0))
                         self.wait(2)
                         self.play(Uncreate(meas_txt0))
+                        '''
 
                         self.show_measurement(locc_op.party_index, locc_op.qudit_index)
                         
@@ -211,13 +212,14 @@ class VideoModel:
                         entanglement_entropy = entanglement_calculator.get_le_lower_bound(self.k_party_obj, partyA_indices, partyB_indices)
                     
                     ee_txt = Text(f"Entanglement entropy between Party {partyA_indices[0]} and the rest: {entanglement_entropy}", font_size=24)
-                    
-
+                    # Rotate the text to counteract the camera's phi and theta rotations
+                    ee_txt.move_to(DOWN)
                     # ee_txt = Text("[This is where the entanglement entropy between party A and the rest will show up.]", font_size=24)
-                    ee_txt.move_to(UP)
+                    self.set_camera_orientation(phi=0* DEGREES, theta=-90* DEGREES)
                     self.play(Create(ee_txt))
                     self.wait(2)
                     self.play(Uncreate(ee_txt))
+                    self.set_camera_orientation(phi=75 * DEGREES, theta=45 * DEGREES)                    
 
                     self.clear_scene()
                 
@@ -259,10 +261,15 @@ class VideoModel:
                 sphere_group, node_group, edge_group, edge_map = self.k_party_mobjects[party_index]
                 
                 # shrink sphere:
-                sphere = sphere_group[qudit_index]
+                sphere_to_remove = sphere_group[qudit_index]
                 self.measurement_visualization(qudit_index)
-                self.play(ScaleInPlace(sphere, scale_factor=0.1, run_time=2))
-                random_color = BLUE if np.random.randint(2) == 0 else RED
+                self.play(FadeOut(sphere_to_remove))
+                
+                print(f"party index in show_measurement: {party_index}")
+                self.removed_qudits[party_index].add(qudit_index)
+
+                # random_color = BLUE if np.random.randint(2) == 0 else RED
+                random_color = BLUE if self.outcome == 0 else RED
                 node_group[qudit_index].set_color(random_color)
 
                 # delete edges: iterate over keys in the edge_map to find any edge involving qudit_index
