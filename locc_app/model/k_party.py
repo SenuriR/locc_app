@@ -136,7 +136,7 @@ class k_party:
         outcomes = []
         all_possible_posteriors = []
 
-        while len(outcomes) < self.dims:
+        while len(outcomes) < self.dims[0]:
             outcome, state = self.q_state.measure([qubit_to_measure])
             if outcome not in outcomes:
                 outcomes.append(outcome)
