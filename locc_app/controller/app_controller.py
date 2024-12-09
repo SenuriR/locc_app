@@ -58,6 +58,9 @@ class AppController:
         elif operation_name == "save_locc_operation":
             result = self.model.save_locc_operation(*args)
             self.view.display_message(f"{result}")
+        elif operation_name == "handle_default_operator":
+            # TODO: make method in model to handle this perform op...
+            print()
         elif operation_name == "execute_protocol":
             self.model.save_execution_type(*args)
             result = self.get_input_for_video_and_call_video()
