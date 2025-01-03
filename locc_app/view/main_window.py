@@ -184,7 +184,8 @@ class MainWindow(QMainWindow):
         # Dictionary of allowed functions with formatted strings
         self.locc_allowed_ops = {
             'M': 'measurement',
-            'C': 'condition'
+            'C': 'condition',
+            'D': 'default'
         }
 
         # Add function buttons
@@ -232,10 +233,6 @@ class MainWindow(QMainWindow):
         execute_button.clicked.connect(self.handle_execute)
         self.layout.addWidget(execute_button)
 
-    # TODO: add default operation functionality (just applying a simple gate to the system)
-    def handle_default_operator(self):
-        print()
-    
     # TODO: add custom gate input functionality
     def handle_add_custom_operator(self):
         print()

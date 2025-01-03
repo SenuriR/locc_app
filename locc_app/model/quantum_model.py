@@ -23,6 +23,7 @@ class QuantumModel:
         self.execution_type = execution_type
 
     def save_locc_operation(self, party_index, qudit_index, operation_type, operator_choice, condition):
+        print(operation_type)
         locc_op_str = ""
         print(operation_type)
         if operator_choice == "XGate":
