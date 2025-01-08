@@ -10,7 +10,7 @@ import platform
 class AppController:
     def __init__(self):
         self.app = QApplication(sys.argv)
-        self.model = QuantumModel()  # Create the model
+        self.quantum_model = QuantumModel()  # Create the model
         self.video_model = VideoModel() # New video model
         self.view = MainWindow(self)  # Pass the controller to the view
 
@@ -23,7 +23,7 @@ class AppController:
         """
         Generate a Manim video by delegating to the model and updating the view.
         """
-        locc_protocol, k_party, execution_type = self.model.get_input_for_video() # to ensure locc procotol and k party objs are created with our quantum model
+        locc_protocol, k_party, execution_type = self.quantum_model.get_input_for_video() # to ensure locc procotol and k party objs are created with our quantum model
 
         try:
             video_path = self.video_model.generate_video(locc_protocol, k_party, execution_type)
@@ -50,19 +50,19 @@ class AppController:
         Handle operations requested by the view, e.g., manipulating quantum states.
         """
         if operation_name == "create_quantum_state":
-            result = self.model.create_quantum_state(*args) 
+            result = self.quantum_model.create_quantum_state(*args) 
             self.view.display_message(f"Initialized state: {result}")
         elif operation_name == "generate_state_desc_label_and_k_party":
-            result = self.model.generate_state_desc_label_and_k_party(*args)
+            result = self.quantum_model.generate_state_desc_label_and_k_party(*args)
             self.view.display_message(f"{result}")
         elif operation_name == "save_locc_operation":
-            result = self.model.save_locc_operation(*args)
+            result = self.quantum_model.save_locc_operation(*args)
             self.view.display_message(f"{result}")
         elif operation_name == "handle_default_operator":
             # TODO: make method in model to handle this perform op...
-            print()
+            print() # Don't think we need this...
         elif operation_name == "execute_protocol":
-            self.model.save_execution_type(*args)
+            self.quantum_model.save_execution_type(*args)
             result = self.get_input_for_video_and_call_video()
             if result[0] == "E": # to ensure it's the error message
                 self.view.display_message(f"{result}")

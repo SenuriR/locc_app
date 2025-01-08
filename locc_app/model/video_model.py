@@ -139,9 +139,13 @@ class VideoModel:
                     self.center_and_scale_party(party_index)
                     qudit_index = self.k_party_obj.get_qudit_index_in_state(locc_op.party_index, locc_op.qudit_index)
 
-                    if locc_op.operation_type == "default":
+                    if locc_op.operation_type == "default": # IMPORTANT: This is where we deal with default operations in the protocol.
                         self.k_party_obj.q_state.evolve(Operator(locc_op.operator), [qudit_index])
-
+                        default_txt = f"Deafault operation: Applying operator {locc_op.operator} on qudit index {qudit_index}"
+                        self.play(Create(default_txt))
+                        self.wait(2)
+                        self.play(Uncreate(default_txt))
+                        
                     elif locc_op.operation_type == "conditional":
                         print("IN CONDITION OPERATION")
                         #retrieve the measurement result and evaluate the 
