@@ -3,6 +3,10 @@ from qiskit.quantum_info import shannon_entropy
 
 class k_party:
     '''
+   
+
+    
+  
     Args:
     k = the number of parties
 
@@ -136,7 +140,7 @@ class k_party:
         outcomes = []
         all_possible_posteriors = []
 
-        while len(outcomes) < self.dims[0]:
+        while len(outcomes) < self.dims:
             outcome, state = self.q_state.measure([qubit_to_measure])
             if outcome not in outcomes:
                 outcomes.append(outcome)

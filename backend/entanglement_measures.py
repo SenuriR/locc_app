@@ -5,7 +5,7 @@ from qiskit.quantum_info import shannon_entropy
 from scipy import optimize
 
 from scipy.linalg import expm
-from model.k_party import k_party
+from k_party import k_party
 
 from qiskit.quantum_info.operators import Operator
 from qiskit.quantum_info import Statevector
@@ -13,8 +13,8 @@ from qiskit.quantum_info import Statevector
 class EntanglementMeasures:
     def __init__(self, N, psi, party_to_measure):
         self.k_party_obj = None
-        self.N = N # dimensions -- no longer needed
-        self.psi = psi # used to stand for k party state...
+        self.N = N
+        self.psi = psi
         self.party_to_measure = party_to_measure
         self.starting_parameters = []
         self.partyA = 0
@@ -28,8 +28,8 @@ class EntanglementMeasures:
 
     def entanglement_fluctuation(self, quantum_state):
         return
-    
-    #lower bound for localisable entanglement USE THIS ONE
+
+    #lower bound for localisable entanglement
     def get_le_lower_bound(self, k_party_obj, partyA, partyB):
         self.k_party_obj = k_party_obj
         self.psi = self.k_party_obj.q_state
@@ -46,8 +46,7 @@ class EntanglementMeasures:
             self.party_to_measure = 0
         
         #v = np.random.uniform(0, 2*np.pi, self.k_party_obj.dims ** 2)
-        # v = np.random.uniform(0, 2*np.pi, (self.k_party_obj.k - 2) * self.k_party_obj.dims ** 2)
-        v = np.random.uniform(0, 2*np.pi, (self.k_party_obj.k - 2) * self.k_party_obj.dims[0] ** 2)
+        v = np.random.uniform(0, 2*np.pi, (self.k_party_obj.k - 2) * self.k_party_obj.dims ** 2)
 
 
         if self.k_party_obj.k > 3:
@@ -63,7 +62,7 @@ class EntanglementMeasures:
             print("Entanglement entropy = ", res.fun)
             return res.fun
 
-    #upper bound for localisable entanglement USE THIS ONE
+    #upper bound for localisable entanglement
     def get_le_upper_bound(self, k_party_obj, partyA, partyB):
         self.k_party_obj = k_party_obj
         self.partyA = partyA
@@ -80,8 +79,7 @@ class EntanglementMeasures:
             self.party_to_measure = 0
 
         # v = np.random.uniform(0, 2*np.pi, self.k_party_obj.dims ** 2)
-        # v = np.random.uniform(0, 2*np.pi, (self.k_party_obj.k - 2) * self.k_party_obj.dims ** 2)
-        v = np.random.uniform(0, 2*np.pi, (self.k_party_obj.k - 2) * self.k_party_obj.dims[0] ** 2)
+        v = np.random.uniform(0, 2*np.pi, (self.k_party_obj.k - 2) * self.k_party_obj.dims ** 2)
 
         if self.k_party_obj.k > 3:
             res = optimize.minimize(self.maximise_le_multiparty, v, method='nelder-mead',
@@ -115,7 +113,7 @@ class EntanglementMeasures:
             self.party_to_measure = 1
 
         if ((partyA == 1 and partyB == 2) or (partyA == 2 and partyB == 1)) :
-            self.party_to_measure = arr[0].dims ** 2 # what does this do?
+            self.party_to_measure = arr[0].dims ** 2
 
         v = np.random.uniform(0, 2*np.pi, arr[0].dims ** 2)
         self.starting_parameters = v
@@ -243,7 +241,7 @@ class EntanglementMeasures:
         self.psi = self.psi.evolve(U_operator, [self.party_to_measure])
 
         q = k_party(self.k_party_obj.k, self.k_party_obj.dims, self.k_party_obj.state_desc, self.psi)
-        all_possible_posteriors = q.measure_all_possibilities(self.party_to_measure)
+        all_possible_posteriors = q.measure_all_possible_posteriors_qiskit(self.party_to_measure)
         
         entropies = []
         probabilities = []
@@ -340,7 +338,7 @@ class EntanglementMeasures:
             self.psi = self.psi.evolve(U_operator, [self.party_to_measure])
             q = k_party(self.k_party_obj.k, self.N, None, self.psi)
 
-            all_posteriors = q.measure_all_possibilities(self.party_to_measure)
+            all_posteriors = q.measure_all_possible_posteriors_qiskit(self.party_to_measure)
 
             for a in all_posteriors:
                 x = (a[0], a[1] * prev_prob)
