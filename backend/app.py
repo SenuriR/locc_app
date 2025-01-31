@@ -51,11 +51,12 @@ def compute_entanglement():
     
     return jsonify({"localizable_entanglement": le})
 
-class LOCCVisualization(Scene):
-    def construct(self):
+class LOCCVisualization(Scene): # this might cause some errors-- not using the ThreeDScene class
+    def construct(self): # this is definitely going to need work-- i.e. handling k > 3
         spheres = [Sphere(radiues=0.5).shift(i * 2) for i in range(3)]
         lines = [Line(spheres[i].get_center(), spheres[i+1].get_center()) for i in range(2)]
         
+        # I believe this part should be okay-- solid way to create graph
         for sphere in spheres:
             self.play(Create(sphere))
         for line in lines:
