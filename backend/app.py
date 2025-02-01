@@ -5,7 +5,7 @@ from k_party import k_party
 from locc_controller import locc_controller
 from locc_operation import locc_operation
 from entanglement_measures import EntanglementMeasures
-from manim import Scene, Sphere, Line, Create, ShowCreation, config
+from manim import Scene, Sphere, Line, Create, config
 import numpy as np
 
 app = Flask(__name__)

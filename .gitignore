@@ -1,0 +1,35 @@
+# Node.js (Frontend) Dependencies
+frontend/node_modules/
+frontend/.vite/
+frontend/dist/
+frontend/.env
+frontend/.DS_Store
+frontend/npm-debug.log
+frontend/yarn-error.log
+
+# Python (Backend) Dependencies
+backend/__pycache__/
+backend/env/
+backend/venv/
+backend/.venv/
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/.DS_Store
+backend/.env
+backend/debug.log
+
+# Virtual Environment (if using venv)
+venv/
+.env
+.env.local
+
+# Manim Generated Files (if applicable)
+backend/media/
+backend/videos/
+backend/*.mp4
+backend/*.gif
+backend/*.png
+
+# OS-Specific Files
+.DS_Store
+Thumbs.db
