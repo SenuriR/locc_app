@@ -26,12 +26,17 @@ class locc_controller:
             #just apply the local operator
             if locc_op.operation_type == "default":
                 self.k_party_obj.q_state.evolve(Operator(locc_op.operator), [qudit_index])
+                # error here: AttributeError: 'numpy.ndarray' object has no attribute 'evolve'
+                # definitely has to do with k party object creation
 
             elif locc_op.operation_type == "conditional_operation":
                 #retrieve the measurement result and evaluate the 
                 print("Stored Measurement outcome for ", locc_op.condition[0], locc_op.condition[1], " = ", self.k_party_obj.measurement_result.get((locc_op.condition[0], locc_op.condition[1])))
                 if self.k_party_obj.measurement_result.get((locc_op.condition[0], locc_op.condition[1])) == locc_op.condition[2]:
                     print("Applying operator = ", locc_op.operator)
+                    print("Operator before conversion:", locc_op.operator)  # Debugging
+                    print("Operator Type:", type(locc_op.operator))  # Debugging
+
                     self.k_party_obj.q_state.evolve(Operator(locc_op.operator), [qudit_index])
 
             elif locc_op.operation_type == "measure":
