@@ -57,7 +57,7 @@ export default function LOCCVizApp() {
   };
   
   return (
-    <div className="flex h-screen bg-gray-900 text-white p-6">
+    <div className="flex h-screen bg-blue-900 text-white p-6">
       {/* Left Panel: Input Form */}
       <div className="w-1/2 p-4">
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
